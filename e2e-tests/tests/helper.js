@@ -1,4 +1,3 @@
-const { test, expect } = require('@playwright/test')
 
 const resetDatabase = async (request) => {
   await request.post('/api/testing/reset')
