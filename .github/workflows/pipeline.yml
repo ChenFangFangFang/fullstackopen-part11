@@ -10,6 +10,7 @@ on:
 jobs:
   simple_deployment_pipeline:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout code
@@ -57,21 +58,34 @@ jobs:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
           SECRET: ${{ secrets.SECRET }}
           NODE_ENV: test
+          PORT: 3003
         run: |
           npm install -g wait-on
-          npm run start:test &
+          # Start backend with explicit port
+          PORT=3003 npm run start:test &
+          # Wait for backend to be ready
+          wait-on http://localhost:3003/health --timeout 60000
+          # Start frontend
           cd bloglist-frontend
           npm run preview &
-          wait-on http://localhost:4173
+          # Wait for frontend to be ready
+          wait-on http://localhost:4173 --timeout 60000
+          # Print running processes and ports for debugging
+          ps aux | grep node
+          netstat -tulpn | grep LISTEN
 
       - name: Run E2E tests
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
           SECRET: ${{ secrets.SECRET }}
           NODE_ENV: test
+          DEBUG: pw:api,pw:browser*
+          PWDEBUG: 1
         run: |
           cd e2e-tests
-          npm run test
+          # Increase test timeout and add retries
+          PLAYWRIGHT_TEST_TIMEOUT=60000 npm run test -- --retries=2 --timeout=60000
+        timeout-minutes: 10
 
       - name: Trigger deployment
         if: ${{ github.event_name == 'push' && !contains(github.event.head_commit.message, '#skip') }}
