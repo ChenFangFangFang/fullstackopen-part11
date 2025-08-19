@@ -67,14 +67,29 @@ jobs:
           PORT=3003 npm run start:test &
           echo "Started backend process with PID $!"
 
-          # Start frontend
+                              # Start frontend
           cd bloglist-frontend
           npm run dev &
-          echo "Started frontend process with PID $!"
+          FRONTEND_PID=$!
+          echo "Started frontend process with PID $FRONTEND_PID"
 
           # Wait for both services to be ready
           npm install -g wait-on
-          wait-on -v http://localhost:3003/health http://localhost:5173 --timeout 60000
+          echo "Waiting for backend..."
+          wait-on -v http://localhost:3003/health --timeout 60000
+          echo "Backend is ready!"
+
+          echo "Waiting for frontend..."
+          wait-on -v http://localhost:5173 --timeout 60000
+          echo "Frontend is ready!"
+
+          # Verify the processes are still running
+          if ps -p $FRONTEND_PID > /dev/null; then
+            echo "Frontend process is running"
+          else
+            echo "Frontend process died"
+            exit 1
+          fi
 
           # Print running processes and ports for debugging
           echo "Running Node.js processes:"
