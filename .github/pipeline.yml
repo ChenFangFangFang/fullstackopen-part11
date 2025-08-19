@@ -1,0 +1,120 @@
+name: Deployment pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+jobs:
+  simple_deployment_pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Print Node and NPM versions
+        run: |
+          node -v
+          npm -v
+
+      - name: Install dependencies
+        run: npm run install:all
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run tests
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          SECRET: ${{ secrets.SECRET }}
+          NODE_ENV: test
+        run: npm run test
+
+      - name: Build frontend
+        run: |
+          cd bloglist-frontend
+          npm install
+          cd ..
+          cp -r bloglist-frontend/dist .
+
+      - name: Install Playwright Browsers
+        run: |
+          cd e2e-tests
+          npm install
+          npx playwright install --with-deps
+
+      - name: Start application for E2E tests
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          SECRET: ${{ secrets.SECRET }}
+          NODE_ENV: test
+        run: |
+          npm run start:test &
+          cd bloglist-frontend
+          npm run preview &
+          wait-on http://localhost:5173
+
+      - name: Run E2E tests
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          SECRET: ${{ secrets.SECRET }}
+          NODE_ENV: test
+        run: |
+          cd e2e-tests
+          npm run test
+
+      - name: Trigger deployment
+        if: ${{ github.event_name == 'push' && !contains(github.event.head_commit.message, '#skip') }}
+        run: |
+          echo "Full URL: https://api.render.com/deploy/srv-${{ secrets.RENDER_SERVICE_ID }}?key=${{ secrets.RENDER_API_KEY }}"
+          curl https://api.render.com/deploy/srv-${{ secrets.RENDER_SERVICE_ID }}?key=${{ secrets.RENDER_API_KEY }}
+
+      - name: Discord notification - Success
+        if: success() && github.event_name == 'push' && !contains(github.event.head_commit.message, '#skip')
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          title: "✅ New version deployed successfully!"
+          description: |
+            Repository: ${{ github.repository }}
+            Commit: ${{ github.event.head_commit.message }}
+            Author: ${{ github.event.head_commit.author.name }}
+          color: 0x28A745
+
+      - name: Discord notification - Failure
+        if: failure()
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          title: "❌ Build Failed!"
+          description: |
+            Repository: ${{ github.repository }}
+            Commit: ${{ github.event.head_commit.message }}
+            Author: ${{ github.event.head_commit.author.name }}
+            Workflow: ${{ github.workflow }}
+            Job: ${{ github.job }}
+            See detailed logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          color: 0xDC3545
+
+  tag_release:
+    needs: [simple_deployment_pipeline]
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' && !contains(github.event.head_commit.message, '#skip') }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: "0"
+
+      - name: Bump version and push tag
+        uses: anothrNick/github-tag-action@1.73.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

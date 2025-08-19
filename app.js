@@ -38,6 +38,10 @@ if (process.env.NODE_ENV === 'test') {
 
 console.log('Finished setting up routes')
 
+app.get('/health', (req, res) => {
+  res.send('ok')
+})
+
 app.use(middleware.unknownEndpoint)
 app.use(middleware.errorHandler)
 
