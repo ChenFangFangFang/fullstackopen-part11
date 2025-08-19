@@ -60,19 +60,27 @@ jobs:
           NODE_ENV: test
           PORT: 3003
         run: |
-          npm install -g wait-on
-          # Start backend with explicit port
+          # Kill any existing processes on the required ports
+          lsof -ti:3003,5173 | xargs kill -9 || true
+
+          # Start backend
           PORT=3003 npm run start:test &
-          # Wait for backend to be ready
-          wait-on http://localhost:3003/health --timeout 60000
+          echo "Started backend process with PID $!"
+
           # Start frontend
           cd bloglist-frontend
-          npm run preview &
-          # Wait for frontend to be ready
-          wait-on http://localhost:4173 --timeout 60000
+          npm run dev &
+          echo "Started frontend process with PID $!"
+
+          # Wait for both services to be ready
+          npm install -g wait-on
+          wait-on -v http://localhost:3003/health http://localhost:5173 --timeout 60000
+
           # Print running processes and ports for debugging
-          ps aux | grep node
-          netstat -tulpn | grep LISTEN
+          echo "Running Node.js processes:"
+          ps aux | grep node || true
+          echo "Listening ports:"
+          netstat -tulpn || true
 
       - name: Run E2E tests
         env:

@@ -86,15 +86,19 @@ module.exports = defineConfig({
   webServer: [
     {
       command: 'cd .. && PORT=3003 npm run start:test',
-      url: 'http://localhost:3003',
-      reuseExistingServer: !process.env.CI,
+      url: 'http://localhost:3003/health',
+      reuseExistingServer: true,
       timeout: 120000,
+      stdout: 'pipe',
+      stderr: 'pipe',
     },
     {
       command: 'cd ../bloglist-frontend && npm run dev',
       url: 'http://localhost:5173',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: true,
       timeout: 120000,
+      stdout: 'pipe',
+      stderr: 'pipe',
     },
   ],
 })
