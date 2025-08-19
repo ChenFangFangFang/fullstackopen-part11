@@ -42,6 +42,7 @@ jobs:
         run: |
           cd bloglist-frontend
           npm install
+          npm run build
           cd ..
           cp -r bloglist-frontend/dist .
 
