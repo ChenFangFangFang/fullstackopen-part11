@@ -67,21 +67,38 @@ jobs:
           PORT=3003 npm run start:test &
           echo "Started backend process with PID $!"
 
-                              # Start frontend
+                                        # Start frontend with debugging
           cd bloglist-frontend
-          npm run dev &
+          echo "Current directory: $(pwd)"
+          echo "Installing frontend dependencies..."
+          npm install
+          echo "Starting frontend in dev mode..."
+          VITE_DEBUG=true npm run dev -- --host 0.0.0.0 --port 5173 > frontend.log 2>&1 &
           FRONTEND_PID=$!
           echo "Started frontend process with PID $FRONTEND_PID"
+
+          # Give Vite some time to start
+          sleep 10
+
+          # Check if frontend started correctly
+          echo "Frontend log output:"
+          cat frontend.log
 
           # Wait for both services to be ready
           npm install -g wait-on
           echo "Waiting for backend..."
-          wait-on -v http://localhost:3003/health --timeout 60000
+          wait-on -v -t 60000 http://localhost:3003/health
           echo "Backend is ready!"
 
           echo "Waiting for frontend..."
-          wait-on -v http://localhost:5173 --timeout 60000
+          wait-on -v -t 60000 http://localhost:5173
           echo "Frontend is ready!"
+
+          # Additional debugging information
+          echo "Checking frontend status..."
+          curl -v http://localhost:5173 || true
+          echo "Network status:"
+          netstat -tulpn || true
 
           # Verify the processes are still running
           if ps -p $FRONTEND_PID > /dev/null; then
