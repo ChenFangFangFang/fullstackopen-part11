@@ -69,3 +69,6 @@ jobs:
         uses: anothrNick/github-tag-action@1.73.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WITH_V: true # 添加 v 前缀
+          DEFAULT_BUMP: minor # 默认增加 minor 版本号
+          RELEASE_BRANCHES: main # 指定发布分支
