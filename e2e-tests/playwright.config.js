@@ -27,10 +27,21 @@ module.exports = defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    // baseURL: 'http://127.0.0.1:3000',
     baseURL: 'http://localhost:5173',
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
+    // Capture screenshot on failure
+    screenshot: 'only-on-failure',
+    // Record video on failure
+    video: 'retain-on-failure',
+    // Set a longer timeout for API requests
+    actionTimeout: 10000,
+    navigationTimeout: 30000,
+    // Configure API request context
+    extraHTTPHeaders: {
+      'Accept': '*/*',
+      'Content-Type': 'application/json',
+    },
   },
 
   /* Configure projects for major browsers */

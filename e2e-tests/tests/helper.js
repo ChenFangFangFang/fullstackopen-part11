@@ -1,20 +1,28 @@
 
 const resetDatabase = async (request) => {
-  await request.post('/api/testing/reset')
-  await request.post('/api/users', {
-    data: {
-      name: 'user',
-      username: 'user',
-      password: '123456'
-    }
-  })
-  await request.post('/api/users', {
-    data: {
-      name: 'testing user',
-      username: 'testing user',
-      password: 'testing'
-    }
-  })
+  try {
+    // Use the backend port for API requests
+    const baseUrl = 'http://localhost:3003'
+
+    await request.post(`${baseUrl}/api/testing/reset`)
+    await request.post(`${baseUrl}/api/users`, {
+      data: {
+        name: 'user',
+        username: 'user',
+        password: '123456'
+      }
+    })
+    await request.post(`${baseUrl}/api/users`, {
+      data: {
+        name: 'testing user',
+        username: 'testing user',
+        password: 'testing'
+      }
+    })
+  } catch (error) {
+    console.error('Reset database failed:', error)
+    throw error
+  }
 }
 
 const login = async (page, username, password) => {
