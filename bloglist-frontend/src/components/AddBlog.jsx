@@ -56,6 +56,7 @@ const AddBlog = ({ onBlogCreated }) => {
             <TextField
               fullWidth
               id="title"
+              data-testid="title"
               label="Title"
               variant="outlined"
               margin="normal"
@@ -67,6 +68,7 @@ const AddBlog = ({ onBlogCreated }) => {
             <TextField
               fullWidth
               id="author"
+              data-testid="author"
               label="Author"
               variant="outlined"
               margin="normal"
@@ -78,6 +80,7 @@ const AddBlog = ({ onBlogCreated }) => {
             <TextField
               fullWidth
               id="url"
+              data-testid="url"
               label="Url"
               variant="outlined"
               margin="normal"

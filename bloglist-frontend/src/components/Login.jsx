@@ -65,6 +65,7 @@ const Login = ({ login }) => {
               <TextField
                 fullWidth
                 id="username"
+                data-testid="username"
                 label="Username"
                 variant="outlined"
                 margin="normal"
@@ -78,6 +79,7 @@ const Login = ({ login }) => {
                 fullWidth
                 type="password"
                 id="password"
+                data-testid="password"
                 label="Password"
                 variant="outlined"
                 defaultValue="Small"

@@ -1,38 +1,53 @@
+const { test, expect } = require('@playwright/test')
+
 const resetDatabase = async (request) => {
   await request.post('/api/testing/reset')
-  await request.post('/api/users',{
-    data:{
+  await request.post('/api/users', {
+    data: {
       name: 'user',
-      username:'user',
-      password:'123456'
+      username: 'user',
+      password: '123456'
     }
   })
-  await request.post('/api/users',{
-    data:{
+  await request.post('/api/users', {
+    data: {
       name: 'testing user',
-      username:'testing user',
-      password:'testing'
+      username: 'testing user',
+      password: 'testing'
     }
-  })}
+  })
+}
 
-const login = async (page, username,password) => {
-  await page.getByTestId('username').fill(username)
-  await page.getByTestId('password').fill(password)
-  await page.getByRole('button',{ name:'Login' }).click()
+const login = async (page, username, password) => {
+  await page.locator('[data-testid="username"] input').fill(username)
+  await page.locator('[data-testid="password"] input').fill(password)
+  await page.getByRole('button', { name: 'Login' }).click()
 }
 const createBlog = async (page, title, author, url) => {
-  await page.getByRole('button', { name: 'create new blog' }).click()
-  await page.getByTestId('title').fill(title)
-  await page.getByTestId('author').fill(author)
-  await page.getByTestId('url').fill(url)
+  // Wait for the create blog button and click it
+  const createButton = await page.getByRole('button', { name: 'create new blog' })
+  await createButton.waitFor()
+  await createButton.click()
+
+  // Wait for form fields and fill them
+  await page.waitForSelector('[data-testid="title"] input')
+  await page.locator('[data-testid="title"] input').fill(title)
+  await page.locator('[data-testid="author"] input').fill(author)
+  await page.locator('[data-testid="url"] input').fill(url)
+
+  // Submit the form
   await page.getByRole('button', { name: 'Create' }).click()
 
-  await page.getByText(`${title} Author: ${author}`).waitFor()
+  // Wait for the blog to appear in the list and be visible
+  await page.waitForSelector('.MuiListItemText-primary')
+  const blogTitle = page.locator('.MuiListItemText-primary').filter({ hasText: title })
+  await blogTitle.waitFor({ state: 'visible', timeout: 10000 })
+  await page.waitForTimeout(500) // Add a small delay to ensure state updates
 }
 const likeTimes = async (page, button, n) => {
-  for (let i = 0; i<n; i++) {
+  for (let i = 0; i < n; i++) {
     await button.click()
-    await page.getByText(`Likes: ${i+1}`).waitFor()
+    await page.getByText(`Likes: ${i + 1}`).waitFor()
   }
 }
 
