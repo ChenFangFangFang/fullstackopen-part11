@@ -77,33 +77,6 @@ jobs:
           echo "Full URL: https://api.render.com/deploy/srv-${{ secrets.RENDER_SERVICE_ID }}?key=${{ secrets.RENDER_API_KEY }}"
           curl https://api.render.com/deploy/srv-${{ secrets.RENDER_SERVICE_ID }}?key=${{ secrets.RENDER_API_KEY }}
 
-      - name: Discord notification - Success
-        if: success() && github.event_name == 'push' && !contains(github.event.head_commit.message, '#skip')
-        uses: sarisia/actions-status-discord@v1
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK }}
-          title: "✅ New version deployed successfully!"
-          description: |
-            Repository: ${{ github.repository }}
-            Commit: ${{ github.event.head_commit.message }}
-            Author: ${{ github.event.head_commit.author.name }}
-          color: 0x28A745
-
-      - name: Discord notification - Failure
-        if: failure()
-        uses: sarisia/actions-status-discord@v1
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK }}
-          title: "❌ Build Failed!"
-          description: |
-            Repository: ${{ github.repository }}
-            Commit: ${{ github.event.head_commit.message }}
-            Author: ${{ github.event.head_commit.author.name }}
-            Workflow: ${{ github.workflow }}
-            Job: ${{ github.job }}
-            See detailed logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          color: 0xDC3545
-
   tag_release:
     needs: [simple_deployment_pipeline]
     runs-on: ubuntu-latest
