@@ -32,8 +32,8 @@ app.use('/api/users', usersRouter)
 app.use('/api/login', loginRouter)
 app.use('/api/comments', commentRouter)
 if (process.env.NODE_ENV === 'test') {
-  const testingRouter = require('./controllers/testing')
-  app.use('/api/testing', testingRouter)
+  const testingRouter = await import('./controllers/testing.js')
+  app.use('/api/testing', testingRouter.default)
 }
 
 console.log('Finished setting up routes')

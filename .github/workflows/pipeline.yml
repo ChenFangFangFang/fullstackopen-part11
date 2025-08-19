@@ -58,10 +58,11 @@ jobs:
           SECRET: ${{ secrets.SECRET }}
           NODE_ENV: test
         run: |
+          npm install -g wait-on
           npm run start:test &
           cd bloglist-frontend
           npm run preview &
-          wait-on http://localhost:5173
+          wait-on http://localhost:4173
 
       - name: Run E2E tests
         env:
